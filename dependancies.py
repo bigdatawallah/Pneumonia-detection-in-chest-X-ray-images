@@ -30,7 +30,7 @@ def validate_password(password):
         return False
     
     # Check if the password contains at least one special character
-    if not re.search(r'[!@#$%^&*(),.?":{}|<>]', password):
+    if not re.search(r'[!@#$%^&*(),.?":{}|<>~]', password):
         return False
     
     return True
@@ -79,12 +79,23 @@ def validate_email(email):
 
 
 def validate_username(username):
+    if re.search(r'[A-Z]', username):
+        return False
     
-
-    pattern = "^[a-zA-Z0-9]*$"
-    if re.match(pattern, username):
-        return True
-    return False
+    
+    if not re.search(r'[a-z]', username):
+        return False
+    
+    
+    if not re.search(r'[0-9]', username):
+        return False
+    
+    
+    if re.search(r'[!@#$%^&*(),.?":{}|<>~]', username):
+        return False
+    
+    return True
+    
 
 
 def sign_up():
@@ -116,7 +127,6 @@ def sign_up():
                                 st.warning('Username Too short')
                         else:
                             st.warning('Username Already Exists')
-
                     else:
                         st.warning('Invalid Username')
                 else:
