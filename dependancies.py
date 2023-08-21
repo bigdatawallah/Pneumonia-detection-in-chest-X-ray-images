@@ -4,7 +4,7 @@ import datetime
 import re
 from deta import Deta
 
-DETA_KEY = 'd0znsaum2uu_SvQzdn4SXyv1eM5UGXULA9AKEP679Tz1'
+DETA_KEY = 'd0znsaum2uu_qWFcViiMp9HsoajVbL4nQ7fNhXFWkpS2'
 
 deta = Deta(DETA_KEY)
 
