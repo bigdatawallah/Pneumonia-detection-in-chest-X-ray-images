@@ -4,11 +4,11 @@ import datetime
 import re
 from deta import Deta
 
-DETA_KEY = 'd0znsaum2uu_qWFcViiMp9HsoajVbL4nQ7fNhXFWkpS2'
+DETA_KEY = 'd0wdrf4hnoy_6AZ6t78HKWW8geoy2kBKWfffbC95ZNVE'
 
 deta = Deta(DETA_KEY)
 
-db = deta.Base('ml_app')
+db = deta.Base('project')
 
 import re
 
