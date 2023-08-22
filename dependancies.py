@@ -4,11 +4,16 @@ import datetime
 import re
 from deta import Deta
 import smtplib
+from cryptography.fernet import Fernet
 
+# Password Encryption
+key = Fernet.generate_key()
+crypter = Fernet(key)
+
+
+# Database authentication cedentials
 
 auth_key = 'd0wdrf4hnoy_6AZ6t78HKWW8geoy2kBKWfffbC95ZNVE'
-
-# User authentication cedentials
 deta = Deta(auth_key)
 db = deta.Base('project')
 
@@ -50,39 +55,6 @@ def validate_password(password):
     return True
 
 
-
-
-def insert_user(email, username,mob, password):
-
-    date_joined = str(datetime.datetime.now())
-    
-    return db.put({'key': email, 'username': username, 'password': password,"mobile":mob ,'date_joined': date_joined})
-    
-
-def fetch_users():
-
-    users = db.fetch()
-    return users.items
-
-
-def get_user_emails():
- 
-    users = db.fetch()
-    emails = []
-    for user in users.items:
-        emails.append(user['key'])
-    return emails
-
-
-def get_usernames():
-    
-    users = db.fetch()
-    usernames = []
-    for user in users.items:
-        usernames.append(user['key'])
-    return usernames
-
-
 def validate_email(email):
    
     pattern = "^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,4}$"
@@ -110,6 +82,56 @@ def validate_username(username):
     
     return True
     
+def validate_age(age):
+    try:
+        age = int(age)
+        if age > 0 and age < 120:
+            return True
+        else:
+            return False
+    except:
+        pass
+
+
+def insert_user(email, username,mob, password):
+
+    date_joined = str(datetime.datetime.now())
+    
+    return db.put({'key': email, 'username': username, 'password': password,"mobile":mob ,'date_joined': date_joined})
+    
+
+def fetch_users():
+
+    users = db.fetch()
+    return users.items
+
+
+def get_user_emails():
+
+    users = db.fetch()
+    emails = []
+    for user in users.items:
+        emails.append(user['key'])
+    return emails
+
+
+def get_usernames():
+    
+    users = db.fetch()
+    usernames = []
+    for user in users.items:
+        usernames.append(user['username'])
+    print(usernames)
+    return usernames
+
+
+def get_password(email):
+    
+    users = db.fetch()
+    for user in users.items:
+        if user['key'] == email:
+            return (str(crypter.decrypt(user['password']),"utf8"))
+    return False
 
 
 def sign_up():
@@ -132,8 +154,8 @@ def sign_up():
                                     if password1 == password2:
                                         if validate_mobile_number(mobile):
                                             
-                                            hashed_password = stauth.Hasher([password2]).generate()
-                                            insert_user(email, username, mobile,hashed_password[0])         # Add User to DB
+                                            hashed =  str(crypter.encrypt(password1.encode()),"utf8")
+                                            insert_user(email, username, mobile,hashed)         # Add User to DB
                                             st.success('Account created successfully!!')
                                             st.balloons()
                                         else:
@@ -159,16 +181,6 @@ def sign_up():
             st.form_submit_button('Sign Up')
 
 
-def validate_age(age):
-    try:
-        age = int(age)
-        if age > 0 and age < 120:
-            return True
-        else:
-            return False
-    except:
-        pass
-
 def patient_info(name,age,mob):
 
     if validate_age(age):
@@ -185,6 +197,7 @@ def patient_info(name,age,mob):
         
         st.warning("Age is not valid")
 
+
 def patient_form():
 
    with st.form(key="patient_info",clear_on_submit=True):
@@ -195,11 +208,12 @@ def patient_form():
       if st.form_submit_button(":green[Submit]"):
           patient_info(name,age,mob)
 
+
 def change_pass(new_pass):
     st.success("Password has been updated")
 
 
-def send_otp(email):
+def send_pass(email):
 
     try:
         HOST = "smtp.googlemail.com"
@@ -222,41 +236,42 @@ def send_otp(email):
         status_code, response = smtp.login(FROM_EMAIL, PASSWORD)
         print(f"[*] Logging in: {status_code} {response}")
 
+        
+
+        x = get_password(email)
         MESSAGE = """Subject: Pneumonia Detection Website
-    This is your otp 56456 to reset your password..."""
+    your password is {}""".format(x)
 
         smtp.sendmail(FROM_EMAIL, TO_EMAIL, MESSAGE)
 
         smtp.quit()
         return True
     except:
-        return False
+        pass
 
 def forgot_pass():
-
-
-    o = False
-    with st.form(key="Forgot Password",clear_on_submit=True):
-        st.subheader(':red[Reset your password]')
-        email = st.text_input("Enter your email",placeholder="Otp will be send to provided email")
-        if st.form_submit_button("send otp"):
-            if validate_email(email):
-                if send_otp(email):
-                    st.success("OTP sent to your email")
-                    o = True
-                else:
-                    st.warning("OTP sent to your email")
-            else:
-                st.warning('Wrong email !!!')
-        if o:     
-            st.checkbox("confirm")
-            opt = st.text_input("Enter your OTP")
-            new_pass = st.text_input("Enter new passeord")
-            confirm_pass = st.text_input("Confirm new passeord")
+        
+        with st.form(key="Forgot Password",clear_on_submit=True):
+            st.subheader(':red[Get your password]')
+            email = st.text_input("Enter your email",placeholder="Password will be send to provided email")
             
-            if st.form_submit_button(":green[Change]"):
-                st.success("Password has been updated")
-                change_pass(new_pass)
+            if st.form_submit_button("Send"):
+
+                if validate_email(email):
+                    if email in get_user_emails():
+
+                        if send_pass(email):
+                            
+                            st.success("Passowrd sent to your email. Login or Change it.",icon="✅")
+                            
+                        else:
+                            st.warning("OTP sent to your email")
+                    else:
+                        st.error("Email not found !!!")
+                else:
+                    st.warning('Wrong email !!!')
+        
+                
 
                     
 

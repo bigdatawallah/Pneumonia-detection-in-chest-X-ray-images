@@ -74,11 +74,11 @@ try:
                 st.sidebar.warning('Username does not exist, Please Sign up')
         
     if not authentication_status:
-        inp = st.sidebar.radio("",['Signup',"Forgot Password"])
+        inp = st.sidebar.radio("",['Signup',"FORGOT PASSWORD"])
 
     if inp == 'Signup':
         sign_up()
-    if inp == 'Forgot Password':
+    if inp == 'FORGOT PASSWORD':
         forgot_pass()
 
 
