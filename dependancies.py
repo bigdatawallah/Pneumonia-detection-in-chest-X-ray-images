@@ -4,13 +4,25 @@ import datetime
 import re
 from deta import Deta
 
-DETA_KEY = 'd0wdrf4hnoy_6AZ6t78HKWW8geoy2kBKWfffbC95ZNVE'
+auth_key = 'd0wdrf4hnoy_6AZ6t78HKWW8geoy2kBKWfffbC95ZNVE'
 
-deta = Deta(DETA_KEY)
-
+# User authentication cedentials
+deta = Deta(auth_key)
 db = deta.Base('project')
 
-import re
+# Patient Data
+db2 = deta.Base('patient')
+
+
+def validate_mobile_number(number):
+
+    pattern = r'^[789]\d{9}$'
+    
+    if re.match(pattern, number):
+        return True
+    else:
+        return False
+    
 
 def validate_password(password):
     # Check if the password is at least 8 characters long
@@ -38,12 +50,12 @@ def validate_password(password):
 
 
 
-def insert_user(email, username, password):
+def insert_user(email, username,mob, password):
 
     date_joined = str(datetime.datetime.now())
-
-    return db.put({'key': email, 'username': username, 'password': password, 'date_joined': date_joined})
-
+    
+    return db.put({'key': email, 'username': username, 'password': password,"mobile":mob ,'date_joined': date_joined})
+    
 
 def fetch_users():
 
@@ -105,6 +117,8 @@ def sign_up():
         username = st.text_input(':blue[Username]', placeholder='Enter Your Username')
         password1 = st.text_input(':blue[Password]', placeholder='Enter Your Password', type='password')
         password2 = st.text_input(':blue[Confirm Password]', placeholder='Confirm Your Password', type='password')
+        mobile = st.text_input(':blue[Mobile]', placeholder='Your Mobile Number')
+        
 
         if email:
             if validate_email(email):
@@ -114,35 +128,70 @@ def sign_up():
                             if len(username) >= 2:
                                 if validate_password(password1):
                                     if password1 == password2:
-                                        
-                                        hashed_password = stauth.Hasher([password2]).generate()
-                                        insert_user(email, username, hashed_password[0])         # Add User to DB
-                                        st.success('Account created successfully!!')
-                                        st.balloons()
+                                        if validate_mobile_number(mobile):
+                                            
+                                            hashed_password = stauth.Hasher([password2]).generate()
+                                            insert_user(email, username, mobile,hashed_password[0])         # Add User to DB
+                                            st.success('Account created successfully!!')
+                                            st.balloons()
+                                        else:
+                                            st.warning("Mobile number is not valid")
                                     else:
                                         st.warning('Passwords Do Not Match')
                                 else:
-                                    st.warning('Password is not valid. Should be like "Xxxx00$00"')
+                                    st.warning('Password is not valid. Should be like "Xyz@123"')
                             else:
                                 st.warning('Username Too short')
                         else:
                             st.warning('Username Already Exists')
                     else:
-                        st.warning('Invalid Username')
+                        st.warning('Invalid Username!Should only Contain smallcase and numbers.')
                 else:
                     st.warning('Email Already exists!!')
             else:
                 st.warning('Invalid Email')
 
         btn1, bt2, btn3, btn4, btn5 = st.columns(5)
-
+        
         with btn3:
             st.form_submit_button('Sign Up')
 
 
+def validate_age(age):
+    try:
+        age = int(age)
+        if age > 0 and age < 120:
+            return True
+        else:
+            return False
+    except:
+        pass
 
+def patient_info(name,age,mob):
 
+    if validate_age(age):
 
+        if validate_mobile_number(mob):
+        
+            date_joined = str(datetime.datetime.now())
+            db2.put({"name":name,"age":age,"mobile":mob,"Date_joined":date_joined})
+            st.balloons()
+
+        else:
+            st.warning("Mobile number is not valid")
+    else:
+        
+        st.warning("Age is not valid")
+
+def patient_form():
+
+   with st.form(key="patient_info",clear_on_submit=True):
+      st.subheader(':green[Patient Details]')
+      name = st.text_input("Enter patient's name")
+      age = st.text_input("Enter patient's age")
+      mob = st.text_input("Enter patient's Mobile")
+      if st.form_submit_button(":green[Submit]"):
+          patient_info(name,age,mob)
 
 
 
