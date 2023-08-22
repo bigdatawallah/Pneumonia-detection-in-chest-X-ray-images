@@ -3,6 +3,8 @@ import streamlit_authenticator as stauth
 import datetime
 import re
 from deta import Deta
+import smtplib
+
 
 auth_key = 'd0wdrf4hnoy_6AZ6t78HKWW8geoy2kBKWfffbC95ZNVE'
 
@@ -83,7 +85,7 @@ def get_usernames():
 
 def validate_email(email):
    
-    pattern = "^[a-zA-Z0-9-_]+@[a-zA-Z0-9]+\.[a-z]{1,3}$"
+    pattern = "^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,4}$"
 
     if re.match(pattern, email):
         return True
@@ -193,5 +195,69 @@ def patient_form():
       if st.form_submit_button(":green[Submit]"):
           patient_info(name,age,mob)
 
+def change_pass(new_pass):
+    st.success("Password has been updated")
+
+
+def send_otp(email):
+
+    try:
+        HOST = "smtp.googlemail.com"
+        PORT = 587
+
+        FROM_EMAIL = "pandey.sp.shiva625@gmail.com"
+
+        TO_EMAIL = email
+        PASSWORD = "jmauqsioloeueqjb"
+
+
+        smtp = smtplib.SMTP(HOST, PORT)
+
+        status_code, response = smtp.ehlo()
+        print(f"[*] Echoing the server: {status_code} {response}")
+
+        status_code, response = smtp.starttls()
+        print(f"[*] Starting TLS connection: {status_code} {response}")
+
+        status_code, response = smtp.login(FROM_EMAIL, PASSWORD)
+        print(f"[*] Logging in: {status_code} {response}")
+
+        MESSAGE = """Subject: Pneumonia Detection Website
+    This is your otp 56456 to reset your password..."""
+
+        smtp.sendmail(FROM_EMAIL, TO_EMAIL, MESSAGE)
+
+        smtp.quit()
+        return True
+    except:
+        return False
+
+def forgot_pass():
+
+
+    o = False
+    with st.form(key="Forgot Password",clear_on_submit=True):
+        st.subheader(':red[Reset your password]')
+        email = st.text_input("Enter your email",placeholder="Otp will be send to provided email")
+        if st.form_submit_button("send otp"):
+            if validate_email(email):
+                if send_otp(email):
+                    st.success("OTP sent to your email")
+                    o = True
+                else:
+                    st.warning("OTP sent to your email")
+            else:
+                st.warning('Wrong email !!!')
+        if o:     
+            st.checkbox("confirm")
+            opt = st.text_input("Enter your OTP")
+            new_pass = st.text_input("Enter new passeord")
+            confirm_pass = st.text_input("Confirm new passeord")
+            
+            if st.form_submit_button(":green[Change]"):
+                st.success("Password has been updated")
+                change_pass(new_pass)
+
+                    
 
 

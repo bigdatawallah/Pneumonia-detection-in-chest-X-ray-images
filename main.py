@@ -1,13 +1,13 @@
 import streamlit as st
 import streamlit_authenticator as stauth
-from dependancies import sign_up, fetch_users,patient_form
+from dependancies import sign_up, fetch_users,patient_form,forgot_pass
 
 
 
 
 
 
-st.set_page_config(page_title='Streamlit', page_icon="chart_with_upwards_trend", initial_sidebar_state='auto')
+st.set_page_config(page_title='Pneumonia Detection', page_icon="chart_with_upwards_trend", initial_sidebar_state='auto')
 
 st.markdown('''
 
@@ -44,13 +44,7 @@ try:
 
     info, info1 = st.columns(2)
 
-    if not authentication_status:
-        inp = st.sidebar.radio("",['Signup'])
-
-        if inp == 'Signup':
-            sign_up()
-        if inp == 'Forgot Password':
-            Authenticator.forgot_password("Forgot Password")
+    
             
 
     if username:
@@ -71,13 +65,21 @@ try:
 
             elif not authentication_status:
                 with info:
-                    st.error('Incorrect Password or username')
+                    st.sidebar.error('Incorrect Password or username')
             else:
                 with info:
-                    st.warning('Please feed in your credentials')
+                    st.sidebar.warning('Please feed in your credentials')
         else:
             with info:
-                st.warning('Username does not exist, Please Sign up')
+                st.sidebar.warning('Username does not exist, Please Sign up')
+        
+    if not authentication_status:
+        inp = st.sidebar.radio("",['Signup',"Forgot Password"])
+
+    if inp == 'Signup':
+        sign_up()
+    if inp == 'Forgot Password':
+        forgot_pass()
 
 
 except:
