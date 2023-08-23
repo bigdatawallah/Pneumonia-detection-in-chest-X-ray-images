@@ -1,6 +1,6 @@
 import streamlit as st
 import streamlit_authenticator as stauth
-from dependancies import sign_up, fetch_users,patient_form,forgot_pass
+from dependancies import sign_up, fetch_users,patient_form,forgot_pass,reset_pass
 
 
 
@@ -20,67 +20,69 @@ st.markdown('''
 
 
 
-try:
-    users = fetch_users()
-    emails = []
-    usernames = []
-    passwords = []
+# try:
+users = fetch_users()
+emails = []
+usernames = []
+passwords = []
 
-    for user in users:
-        emails.append(user['key'])
-        usernames.append(user['username'])
-        passwords.append(user['password'])
+for user in users:
+    emails.append(user['key'])
+    usernames.append(user['username'])
+    passwords.append(user['password'])
 
-    credentials = {'usernames': {}}
-    for index in range(len(emails)):
-        credentials['usernames'][usernames[index]] = {'name': emails[index], 'password': passwords[index]}
+credentials = {'usernames': {}}
+for index in range(len(emails)):
+    credentials['usernames'][usernames[index]] = {'name': emails[index], 'password': passwords[index]}
 
-    Authenticator = stauth.Authenticate(credentials, cookie_name='Streamlit', key='abcdef', cookie_expiry_days=4)
-
-
-    email, authentication_status, username = Authenticator.login(':green[Login]', 'sidebar')
+Authenticator = stauth.Authenticate(credentials, cookie_name='Streamlit', key='abcdef', cookie_expiry_days=4)
 
 
+email, authentication_status, username = Authenticator.login(':green[Login]', 'sidebar')
 
-    info, info1 = st.columns(2)
 
-    
+
+info, info1 = st.columns(2)
+
+
+        
+
+if username:
+    if username in usernames:
+        if authentication_status:
+
+            
+            st.sidebar.subheader(f'Welcome {username}')
+
+            Authenticator.logout(':red[Log Out]', 'sidebar')
+
             
 
-    if username:
-        if username in usernames:
-            if authentication_status:
+            st.subheader(':red[Pneumonia Detection Website]')
 
-                
-                st.sidebar.subheader(f'Welcome {username}')
-
-                Authenticator.logout(':red[Log Out]', 'sidebar')
-
-                
-
-                st.subheader(':red[Pneumonia Detection Website]')
-
-                patient_form()
+            patient_form()
 
 
-            elif not authentication_status:
-                with info:
-                    st.sidebar.error('Incorrect Password or username')
-            else:
-                with info:
-                    st.sidebar.warning('Please feed in your credentials')
+        elif not authentication_status:
+            with info:
+                st.sidebar.error('Incorrect Password or username')
         else:
             with info:
-                st.sidebar.warning('Username does not exist, Please Sign up')
-        
-    if not authentication_status:
-        inp = st.sidebar.radio("",['Signup',"FORGOT PASSWORD"])
+                st.sidebar.warning('Please feed in your credentials')
+    else:
+        with info:
+            st.sidebar.warning('Username does not exist, Please Sign up')
+inp = None  
+if not authentication_status:
+    inp = st.sidebar.radio("Select Option",['SIGN UP',"RESET PASSWORD","FORGOT PASSWORD"])
 
-    if inp == 'Signup':
-        sign_up()
-    if inp == 'FORGOT PASSWORD':
-        forgot_pass()
+if inp == 'SIGN UP':
+    sign_up()
+elif inp == 'FORGOT PASSWORD':
+    forgot_pass()
+elif inp == 'RESET PASSWORD':
+    reset_pass()
 
 
-except:
-    st.success('Refresh Page')
+# except:
+#     st.success('Refresh Page')

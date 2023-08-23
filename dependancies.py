@@ -4,11 +4,9 @@ import datetime
 import re
 from deta import Deta
 import smtplib
-from cryptography.fernet import Fernet
-
-# Password Encryption
-key = Fernet.generate_key()
-crypter = Fernet(key)
+import random
+import string
+import bcrypt
 
 
 # Database authentication cedentials
@@ -17,7 +15,7 @@ auth_key = 'd0wdrf4hnoy_6AZ6t78HKWW8geoy2kBKWfffbC95ZNVE'
 deta = Deta(auth_key)
 db = deta.Base('project')
 
-# Patient Data
+# Patient Database
 db2 = deta.Base('patient')
 
 
@@ -54,6 +52,10 @@ def validate_password(password):
     
     return True
 
+def generate_random_password(length=8):
+    characters = string.ascii_letters + string.digits + string.punctuation
+    password = ''.join(random.choice(characters) for _ in range(length))
+    return password
 
 def validate_email(email):
    
@@ -126,12 +128,14 @@ def get_usernames():
 
 
 def get_password(email):
-    
+    p = None
     users = db.fetch()
     for user in users.items:
         if user['key'] == email:
-            return (str(crypter.decrypt(user['password']),"utf8"))
-    return False
+            p = user['password']
+            break
+    return p
+    
 
 
 def sign_up():
@@ -154,8 +158,8 @@ def sign_up():
                                     if password1 == password2:
                                         if validate_mobile_number(mobile):
                                             
-                                            hashed =  str(crypter.encrypt(password1.encode()),"utf8")
-                                            insert_user(email, username, mobile,hashed)         # Add User to DB
+                                            hashed =  stauth.Hasher([password1]).generate()
+                                            insert_user(email, username, mobile,hashed[0])         # Add User to DB
                                             st.success('Account created successfully!!')
                                             st.balloons()
                                         else:
@@ -213,7 +217,7 @@ def change_pass(new_pass):
     st.success("Password has been updated")
 
 
-def send_pass(email):
+def send_pass(email,new_pass):
 
     try:
         HOST = "smtp.googlemail.com"
@@ -238,9 +242,8 @@ def send_pass(email):
 
         
 
-        x = get_password(email)
-        MESSAGE = """Subject: Pneumonia Detection Website
-    your password is {}""".format(x)
+        MESSAGE = """Subject: Pneumonia Detection Website \n\n
+    your password is '{}' """.format(new_pass)
 
         smtp.sendmail(FROM_EMAIL, TO_EMAIL, MESSAGE)
 
@@ -248,6 +251,54 @@ def send_pass(email):
         return True
     except:
         pass
+
+def set_pass(email,new_pass = generate_random_password()):
+    try:
+        users = db.fetch()
+        for user in users.items:
+            if user['key'] == email:
+                hashed = stauth.Hasher([new_pass]).generate()
+                db.update(key=email,updates={'password':hashed[0]})
+                return new_pass
+    except:
+        st.success("Refresh and try again....")    
+    
+def reset_pass():
+    with st.form(key="Reset Password",clear_on_submit=True):
+            st.subheader(':blue[Change Your Password]')
+            email = st.text_input("Enter your email",placeholder="Enter Your Current Email")
+            curr_pass = st.text_input("Enter your current passowrd",placeholder="Enter Your Current Passowrd")
+            new_passs = st.text_input("Enter your New Password",placeholder="Enter Your New Passowrd")
+            confirm_new_passs = st.text_input("Confirm Your Password",placeholder="Confirm Your New Password")
+            
+            if st.form_submit_button("Change"):
+
+                if validate_email(email):
+                    if email in get_user_emails():
+                        if validate_password(new_passs):
+                            if new_passs == confirm_new_passs:
+                                if bcrypt.checkpw(curr_pass.encode(), get_password(email).encode()):
+                                    
+                                    
+                                    new_pass = set_pass(email,new_passs) 
+                                    if send_pass(email,new_pass):
+                                        
+                                        
+                                        st.success("Passowrd Changed Succesfully. Login Please..",icon="✅")
+
+                                        
+                                    else:
+                                        st.warning("OTP sent to your email")
+                                else:
+                                    st.warning("Wrong Password !!!")
+                            else:
+                                st.warning("Password not matching !!!")
+                        else:
+                            st.warning('New password is not valid. Should in format "Xyz@123"')
+                    else:
+                        st.error("Email not found !!!")
+                else:
+                    st.warning('Wrong email !!!')
 
 def forgot_pass():
         
@@ -259,10 +310,13 @@ def forgot_pass():
 
                 if validate_email(email):
                     if email in get_user_emails():
-
-                        if send_pass(email):
+                        new_pass = set_pass(email)
+                        
+                        if send_pass(email,new_pass):
+                            
                             
                             st.success("Passowrd sent to your email. Login or Change it.",icon="✅")
+
                             
                         else:
                             st.warning("OTP sent to your email")
@@ -272,6 +326,7 @@ def forgot_pass():
                     st.warning('Wrong email !!!')
         
                 
+
 
                     
 
