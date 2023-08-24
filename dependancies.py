@@ -7,7 +7,7 @@ import smtplib
 import random
 import string
 import bcrypt
-
+import json
 
 # Database authentication cedentials
 
@@ -139,83 +139,80 @@ def get_password(email):
 
 
 def sign_up():
-    with st.form(key='signup', clear_on_submit=True):
-        st.subheader(':green[Sign Up]')
-        email = st.text_input(':blue[Email]', placeholder='Enter Your Email')
-        username = st.text_input(':blue[Username]', placeholder='Enter Your Username')
-        password1 = st.text_input(':blue[Password]', placeholder='Enter Your Password', type='password')
-        password2 = st.text_input(':blue[Confirm Password]', placeholder='Confirm Your Password', type='password')
-        mobile = st.text_input(':blue[Mobile]', placeholder='Your Mobile Number')
+    with st.sidebar.form(key='signup', clear_on_submit=True):
+        st.markdown("""<h3><span style='color:violet'>SIGN UP</span></h3>""", 
+               unsafe_allow_html=True,)
+        email = st.text_input(':email: :blue[Email]', placeholder='Enter Your Email')
+        username = st.text_input(':id: :blue[Username]', placeholder='Enter Your Username')
+        mobile = st.text_input(':vibration_mode: :blue[Mobile]', placeholder='Your Mobile Number')
+        password1 = st.text_input(':lock: :blue[Password]', placeholder='Enter Your Password', type='password')
+        password2 = st.text_input(':lock: :blue[Confirm Password]', placeholder='Confirm Your Password', type='password')
+        
+        if st.form_submit_button('Sign Up'):
         
 
-        if email:
-            if validate_email(email):
-                if email not in get_user_emails():
-                    if validate_username(username):
-                        if username not in get_usernames():
-                            if len(username) >= 2:
-                                if validate_password(password1):
-                                    if password1 == password2:
-                                        if validate_mobile_number(mobile):
-                                            
-                                            hashed =  stauth.Hasher([password1]).generate()
-                                            insert_user(email, username, mobile,hashed[0])         # Add User to DB
-                                            st.success('Account created successfully!!')
-                                            st.balloons()
+            if email:
+                if validate_email(email):
+                    if email not in get_user_emails():
+                        if validate_username(username):
+                            if username not in get_usernames():
+                                if len(username) >= 2:
+                                    if validate_password(password1):
+                                        if password1 == password2:
+                                            if validate_mobile_number(mobile):
+                                                
+                                                hashed =  stauth.Hasher([password1]).generate()
+                                                insert_user(email, username, mobile,hashed[0])         # Add User to DB
+                                                st.success('Account created successfully!!')
+                                                st.balloons()
+                                            else:
+                                                st.warning("Mobile number is not valid")
                                         else:
-                                            st.warning("Mobile number is not valid")
+                                            st.warning('Passwords Do Not Match')
                                     else:
-                                        st.warning('Passwords Do Not Match')
+                                        st.warning('Password is not valid. Should be like "Xyz@123"')
                                 else:
-                                    st.warning('Password is not valid. Should be like "Xyz@123"')
+                                    st.warning('Username Too short')
                             else:
-                                st.warning('Username Too short')
+                                st.warning('Username Already Exists')
                         else:
-                            st.warning('Username Already Exists')
+                            st.warning('Invalid Username!Should only Contain smallcase and numbers.')
                     else:
-                        st.warning('Invalid Username!Should only Contain smallcase and numbers.')
+                        st.warning('Email Already exists!!')
                 else:
-                    st.warning('Email Already exists!!')
+                    st.warning('Invalid Email')
             else:
                 st.warning('Invalid Email')
 
-        btn1, bt2, btn3, btn4, btn5 = st.columns(5)
-        
-        with btn3:
-            st.form_submit_button('Sign Up')
 
 
 def patient_info(name,age,mob):
+    if name:
+        if validate_age(age):
 
-    if validate_age(age):
+            if validate_mobile_number(mob):
+            
+                date_joined = str(datetime.datetime.now())
+                db2.put({"name":name,"age":age,"mobile":mob,"Date_joined":date_joined})
+                st.balloons()
 
-        if validate_mobile_number(mob):
-        
-            date_joined = str(datetime.datetime.now())
-            db2.put({"name":name,"age":age,"mobile":mob,"Date_joined":date_joined})
-            st.balloons()
-
+            else:
+                st.warning("Mobile number is not valid")
         else:
-            st.warning("Mobile number is not valid")
+            
+            st.warning("Age is not valid")
     else:
-        
-        st.warning("Age is not valid")
+        st.warning("Invalid Patient Name...")
 
 
 def patient_form():
-
-   with st.form(key="patient_info",clear_on_submit=True):
+    with st.form(key="patient_info",clear_on_submit=True):
       st.subheader(':green[Patient Details]')
       name = st.text_input("Enter patient's name")
       age = st.text_input("Enter patient's age")
       mob = st.text_input("Enter patient's Mobile")
       if st.form_submit_button(":green[Submit]"):
           patient_info(name,age,mob)
-
-
-def change_pass(new_pass):
-    st.success("Password has been updated")
-
 
 def send_pass(email,new_pass):
 
@@ -264,14 +261,15 @@ def set_pass(email,new_pass = generate_random_password()):
         st.success("Refresh and try again....")    
     
 def reset_pass():
-    with st.form(key="Reset Password",clear_on_submit=True):
-            st.subheader(':blue[Change Your Password]')
-            email = st.text_input("Enter your email",placeholder="Enter Your Current Email")
-            curr_pass = st.text_input("Enter your current passowrd",placeholder="Enter Your Current Passowrd")
-            new_passs = st.text_input("Enter your New Password",placeholder="Enter Your New Passowrd")
-            confirm_new_passs = st.text_input("Confirm Your Password",placeholder="Confirm Your New Password")
+    with st.sidebar.form(key="Reset Password",clear_on_submit=True):
+            st.markdown("""<h3><span style='color:orange'>CHANGE PASSWORD</span></h3>""", 
+               unsafe_allow_html=True,)
+            email = st.text_input(":email: :green[Email]",placeholder="Enter Your Current Email")
+            curr_pass = st.text_input(":lock: :green[Current Passowrd]",placeholder="Enter Your Current Passowrd",type='password')
+            new_passs = st.text_input(":lock: :green[New Password]",placeholder="Enter Your New Passowrd",type='password')
+            confirm_new_passs = st.text_input(":lock: :green[Confirm New Password]",placeholder="Confirm Your New Password",type='password')
             
-            if st.form_submit_button("Change"):
+            if st.form_submit_button(':green[Change]'):
 
                 if validate_email(email):
                     if email in get_user_emails():
@@ -302,30 +300,37 @@ def reset_pass():
 
 def forgot_pass():
         
-        with st.form(key="Forgot Password",clear_on_submit=True):
-            st.subheader(':red[Get your password]')
-            email = st.text_input("Enter your email",placeholder="Password will be send to provided email")
+        with st.sidebar.form(key="Forgot Password",clear_on_submit=True):
+            st.markdown("""<h3><span style='color:red'>GET NEW PASSWORD</span></h3>""", 
+               unsafe_allow_html=True,)
+            email = st.text_input(':email: :green[Email]',placeholder="Password will be send to provided email")
             
-            if st.form_submit_button("Send"):
+            if st.form_submit_button(':red[Send]'):
+                if email:
+                    if validate_email(email):
+                        if email in get_user_emails():
+                            new_pass = set_pass(email)
+                            
+                            if send_pass(email,new_pass):
+                                
+                                
+                                st.success("Passowrd sent to your email. Login or Change it.",icon="✅")
 
-                if validate_email(email):
-                    if email in get_user_emails():
-                        new_pass = set_pass(email)
-                        
-                        if send_pass(email,new_pass):
-                            
-                            
-                            st.success("Passowrd sent to your email. Login or Change it.",icon="✅")
-
-                            
+                                
+                            else:
+                                st.warning("OTP sent to your email")
                         else:
-                            st.warning("OTP sent to your email")
+                            st.error("Email not found !!!")
                     else:
-                        st.error("Email not found !!!")
+                        st.warning('Email not found !!!')
                 else:
-                    st.warning('Wrong email !!!')
-        
-                
+                    st.warning("Please enter email...")
+
+def load_lottie(path:str):
+
+    with open(path,"r") as f:
+        return json.load(f)
+              
 
 
                     
