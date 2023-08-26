@@ -1,7 +1,7 @@
 import streamlit as st
 import streamlit_authenticator as stauth
 import datetime
-import re
+import re,os
 from deta import Deta
 import smtplib
 import random
@@ -142,13 +142,13 @@ def sign_up():
     with st.sidebar.form(key='signup', clear_on_submit=True):
         st.markdown("""<h3><span style='color:violet'>SIGN UP</span></h3>""", 
                unsafe_allow_html=True,)
-        email = st.text_input(':email: :blue[Email]', placeholder='Enter Your Email')
-        username = st.text_input(':id: :blue[Username]', placeholder='Enter Your Username')
-        mobile = st.text_input(':vibration_mode: :blue[Mobile]', placeholder='Your Mobile Number')
-        password1 = st.text_input(':lock: :blue[Password]', placeholder='Enter Your Password', type='password')
-        password2 = st.text_input(':lock: :blue[Confirm Password]', placeholder='Confirm Your Password', type='password')
+        email = st.text_input(label=':email: :blue[Email]', placeholder='Enter Your Email')
+        username = st.text_input(label=':id: :blue[Username]', placeholder='Enter Your Username')
+        mobile = st.text_input(label=':vibration_mode: :blue[Mobile]', placeholder='Your Mobile Number')
+        password1 = st.text_input(label=':lock: :blue[Password]', placeholder='Enter Your Password', type='password')
+        password2 = st.text_input(label=':lock: :blue[Confirm Password]', placeholder='Confirm Your Password', type='password')
         
-        if st.form_submit_button('Sign Up'):
+        if st.form_submit_button(label='Sign Up'):
         
 
             if email:
@@ -208,10 +208,10 @@ def patient_info(name,age,mob):
 def patient_form():
     with st.form(key="patient_info",clear_on_submit=True):
       st.subheader(':green[Patient Details]')
-      name = st.text_input("Enter patient's name")
-      age = st.text_input("Enter patient's age")
-      mob = st.text_input("Enter patient's Mobile")
-      if st.form_submit_button(":green[Submit]"):
+      name = st.text_input(label="Enter patient's name")
+      age = st.text_input(label="Enter patient's age")
+      mob = st.text_input(label="Enter patient's Mobile")
+      if st.form_submit_button(label=":green[Submit]"):
           patient_info(name,age,mob)
 
 def send_pass(email,new_pass):
@@ -264,12 +264,12 @@ def reset_pass():
     with st.sidebar.form(key="Reset Password",clear_on_submit=True):
             st.markdown("""<h3><span style='color:orange'>CHANGE PASSWORD</span></h3>""", 
                unsafe_allow_html=True,)
-            email = st.text_input(":email: :green[Email]",placeholder="Enter Your Current Email")
-            curr_pass = st.text_input(":lock: :green[Current Passowrd]",placeholder="Enter Your Current Passowrd",type='password')
-            new_passs = st.text_input(":lock: :green[New Password]",placeholder="Enter Your New Passowrd",type='password')
-            confirm_new_passs = st.text_input(":lock: :green[Confirm New Password]",placeholder="Confirm Your New Password",type='password')
+            email = st.text_input(label=":email: :green[Email]",placeholder="Enter Your Current Email")
+            curr_pass = st.text_input(label=":lock: :green[Current Passowrd]",placeholder="Enter Your Current Passowrd",type='password')
+            new_passs = st.text_input(label=":lock: :green[New Password]",placeholder="Enter Your New Passowrd",type='password')
+            confirm_new_passs = st.text_input(label=":lock: :green[Confirm New Password]",placeholder="Confirm Your New Password",type='password')
             
-            if st.form_submit_button(':green[Change]'):
+            if st.form_submit_button(label=':green[Change]'):
 
                 if validate_email(email):
                     if email in get_user_emails():
@@ -303,9 +303,9 @@ def forgot_pass():
         with st.sidebar.form(key="Forgot Password",clear_on_submit=True):
             st.markdown("""<h3><span style='color:red'>GET NEW PASSWORD</span></h3>""", 
                unsafe_allow_html=True,)
-            email = st.text_input(':email: :green[Email]',placeholder="Password will be send to provided email")
+            email = st.text_input(label=':email: :green[Email]',placeholder="Password will be send to provided email")
             
-            if st.form_submit_button(':red[Send]'):
+            if st.form_submit_button(label=':red[Send]'):
                 if email:
                     if validate_email(email):
                         if email in get_user_emails():
@@ -330,9 +330,17 @@ def load_lottie(path:str):
 
     with open(path,"r") as f:
         return json.load(f)
-              
+    
 
-
+def save_image(uploaded_file, username):
+    if uploaded_file is not None:
+        d = str(datetime.datetime.now()).replace(" ", "_").replace(":", "-")  # Replacing colons with underscores
+        image_folder = "patient_images" 
+        img = f"{username}_{d}_{uploaded_file.name}"
+        image_path = os.path.join(image_folder, img)
+        with open(image_path, "wb") as f:
+            f.write(uploaded_file.read())
+        st.success("Image saved successfully!")
                     
 
 

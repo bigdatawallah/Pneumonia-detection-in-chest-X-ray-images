@@ -1,22 +1,27 @@
 import streamlit as st
 import streamlit_authenticator as stauth
-from dependancies import sign_up, fetch_users,patient_form,forgot_pass,reset_pass ,load_lottie
+from dependancies import sign_up, fetch_users,patient_form,forgot_pass,reset_pass ,load_lottie,save_image
 from streamlit_lottie import st_lottie
 
 
-st.set_page_config(page_title='Pneumonia Detection', page_icon=":hospital:", initial_sidebar_state='collapsed')
+st.set_page_config(page_title='Pneumonia Diagnosis', page_icon=":hospital:", initial_sidebar_state='collapsed')
 
 
 
 st.markdown('''
             
 
-            <style> .css-zq5wmm.ezrtsby0 {visibility:hidden;}</style>
-            <style> .css-cio0dv.ea3mdgi1 {visibility:hidden;}</style>
-            <style> .css-aw8l5d.eczjsme1 {color: rgb(40 255 47);top: 3.5rem;}</style>
-            <style> .css-1b9x38r.eczjsme2 {color: rgb(500 87 94);top: 3.5rem;}</style>
+             <style> .css-zq5wmm.ezrtsby0 {visibility:hidden;}</style>
+             <style> .css-cio0dv.ea3mdgi1 {visibility:hidden;}</style>
+            <style> .css-aw8l5d.eczjsme1 {color: rgb(40 255 47);top: 0.5rem;}</style>
+            <style> .css-1avcm0n.ezrtsby2 {height: 0.875rem;}</style>
+        
+            <style> .css-1b9x38r.eczjsme2 {color: rgb(500 87 94);top: 0.5rem;}</style>
             <style> .css-1544g2n.eczjsme4 {padding: 10rem 1rem 45.5rem;}</style>
             <style> .css-fblp2m {width: 3.25rem;height: 3.25rem;}</style>
+            <style> .css-zt5igj.e1nzilvr3 {text-align: center;}</style>
+            <style> .css-10trblm.e1nzilvr0 {font-size:45px;}</style>
+           
             
 
 ''',unsafe_allow_html=True)
@@ -51,7 +56,10 @@ try:
     if username:
         if username in usernames:
             if authentication_status:
-                    col1 ,col2 = st.columns([3,1])
+                    
+                    st.title(':stethoscope: :red[Pneumonia Scan] :stethoscope:')
+                    
+
                     with st.sidebar:
                         
                         
@@ -63,14 +71,21 @@ try:
                         
                             
 
-                    with col2:
-                        lottie = load_lottie("lottie_images\lung.json")
-                        st_lottie(lottie,quality="high",height=200)
                     
-                    with col1:
-                        st.subheader(':red[Pneumonia Detection Website]')
+                    lottie = load_lottie("lottie_images\lung.json")
+                    st_lottie(lottie,quality="high",height=200)
+                
+                
 
-                        patient_form()
+                    patient_form()
+                    
+                    st.subheader("Pneumonia X-Ray Image")
+
+                    img = st.file_uploader(label="Choose an image...", type=["jpg", "png",])
+
+                    if img:
+                        save_image(img,username)
+                        st.image(image=img,use_column_width=True,)
 
 
             elif not authentication_status:
@@ -85,7 +100,7 @@ try:
         with st.sidebar:
             st.markdown("""<h1><span style='color:#87CEEB'>Option Menu</span></h1>""", 
                 unsafe_allow_html=True,)
-            inp = st.selectbox("",['SIGN UP',"RESET PASSWORD","FORGOT PASSWORD"],label_visibility="collapsed")
+            inp = st.selectbox(label="hjgh",options=['SIGN UP',"RESET PASSWORD","FORGOT PASSWORD"],label_visibility="hidden")
 
             if inp == 'SIGN UP':
                 sign_up()
