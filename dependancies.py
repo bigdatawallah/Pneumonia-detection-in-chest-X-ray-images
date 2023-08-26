@@ -8,6 +8,10 @@ import random
 import string
 import bcrypt
 import json
+import tensorflow as tf
+from PIL import Image
+from keras.optimizers import Adamax
+
 
 # Database authentication cedentials
 
@@ -186,15 +190,15 @@ def sign_up():
 
 
 
-def patient_info(name,age,mob):
+def patient_info(username,name,age,mob,image):
     if name:
         if validate_age(age):
 
             if validate_mobile_number(mob):
             
                 date_joined = str(datetime.datetime.now())
-                db2.put({"name":name,"age":age,"mobile":mob,"Date_joined":date_joined})
-                st.balloons()
+                db2.put({"Username":username,"Patient Name":name,"Age":age,"Mobile":mob,"Date joined":date_joined,"Image":image})
+                return True
 
             else:
                 st.warning("Mobile number is not valid")
@@ -203,16 +207,24 @@ def patient_info(name,age,mob):
             st.warning("Age is not valid")
     else:
         st.warning("Invalid Patient Name...")
+    return False
 
 
-def patient_form():
-    with st.form(key="patient_info",clear_on_submit=True):
-      st.subheader(':green[Patient Details]')
-      name = st.text_input(label="Enter patient's name")
-      age = st.text_input(label="Enter patient's age")
-      mob = st.text_input(label="Enter patient's Mobile")
-      if st.form_submit_button(label=":green[Submit]"):
-          patient_info(name,age,mob)
+def patient_form(username):
+    with st.form(key="patient_info",clear_on_submit=False):
+        st.subheader(':green[Patient Details]')
+        name = st.text_input(label="Enter patient's name")
+        age = st.text_input(label="Enter patient's age")
+        mob = st.text_input(label="Enter patient's Mobile")
+        img = st.file_uploader(label="Upload Pneumonia X-ray Image", type=["jpg", "png",])
+
+        if st.form_submit_button(label=":green[Submit]"):
+            d = str(datetime.datetime.now()).replace(" ", "_").replace(":", "-")  # Replacing colons with underscores
+            image_name = f"{username}_{d}_{img.name}"
+            if patient_info(username,name,age,mob,image_name):
+                save_image(img,username,image_name)
+                return True,image_name
+        return False,False
 
 def send_pass(email,new_pass):
 
@@ -332,15 +344,35 @@ def load_lottie(path:str):
         return json.load(f)
     
 
-def save_image(uploaded_file, username):
+def save_image(uploaded_file, username,image_name):
     if uploaded_file is not None:
-        d = str(datetime.datetime.now()).replace(" ", "_").replace(":", "-")  # Replacing colons with underscores
         image_folder = "patient_images" 
-        img = f"{username}_{d}_{uploaded_file.name}"
-        image_path = os.path.join(image_folder, img)
+        
+        image_path = os.path.join(image_folder, image_name)
         with open(image_path, "wb") as f:
             f.write(uploaded_file.read())
-        st.success("Image saved successfully!")
-                    
+        st.success("Image Loaded successfully!")
+
+
+def predict(image_name):
+    model = tf.keras.models.load_model("Pneumonia Detection .h5", compile=False)
+    model.compile(Adamax(learning_rate= 0.001), loss= 'binary_crossentropy', metrics= ['accuracy'])
+    image_folder = "patient_images" 
+    image_path = os.path.join(image_folder, image_name)
+
+    image = Image.open(image_path)
+    st.image(image)
+
+    # Preprocess the image
+    rgb_image = image.convert("RGB")
+    img = rgb_image.resize((224, 224))
+    img_array = tf.keras.preprocessing.image.img_to_array(img)
+    img_array = tf.expand_dims(img_array, 0)
+
+    # Make predictions
+    predictions = model.predict(img_array)
+    class_labels = ['Normal', 'Pneumonia']
+    score = tf.nn.softmax(predictions[0])
+    return True,f"{class_labels[tf.argmax(score)]}"
 
 
