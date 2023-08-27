@@ -1,6 +1,6 @@
 import streamlit as st
 import streamlit_authenticator as stauth
-import datetime
+import datetime,numpy as np
 import re,os
 from deta import Deta
 import smtplib
@@ -10,8 +10,7 @@ import bcrypt
 import json
 import tensorflow as tf
 from PIL import Image
-from keras.optimizers import Adamax
-
+import cv2
 
 # Database authentication cedentials
 
@@ -25,7 +24,7 @@ db2 = deta.Base('patient')
 
 def validate_mobile_number(number):
 
-    pattern = r'^[789]\d{9}$'
+    pattern = r'^[6789]\d{9}$'
     
     if re.match(pattern, number):
         return True
@@ -219,11 +218,12 @@ def patient_form(username):
         img = st.file_uploader(label="Upload Pneumonia X-ray Image", type=["jpg", "png",])
 
         if st.form_submit_button(label=":green[Submit]"):
-            d = str(datetime.datetime.now()).replace(" ", "_").replace(":", "-")  # Replacing colons with underscores
-            image_name = f"{username}_{d}_{img.name}"
-            if patient_info(username,name,age,mob,image_name):
-                save_image(img,username,image_name)
-                return True,image_name
+            if img is not None:
+                d = str(datetime.datetime.now()).replace(" ", "_").replace(":", "-")  # Replacing colons with underscores
+                image_name = f"{username}_{d}_{img.name}"
+                if patient_info(username,name,age,mob,image_name):
+                    save_image(img,username,image_name)
+                    return True,image_name
         return False,False
 
 def send_pass(email,new_pass):
@@ -252,7 +252,7 @@ def send_pass(email,new_pass):
         
 
         MESSAGE = """Subject: Pneumonia Detection Website \n\n
-    your password is '{}' """.format(new_pass)
+    your new password is '{}' """.format(new_pass)
 
         smtp.sendmail(FROM_EMAIL, TO_EMAIL, MESSAGE)
 
@@ -353,26 +353,35 @@ def save_image(uploaded_file, username,image_name):
             f.write(uploaded_file.read())
         st.success("Image Loaded successfully!")
 
+def PneumoniaPrediction(img,model):
+    img = np.array(img)/255
+    img = img.reshape(1,200, 200, -1)
+    isPneumonic = model.predict(img)
+    print(isPneumonic)
+    
+    if isPneumonic[0][0] >=0.5:
+        imgClass = "Pneumonia"
+    else:
+        imgClass = "Normal"
+    return imgClass
+
+
+def img_process_V2(img):
+    img_size = 200
+    img_arr = cv2.imread(img, cv2.IMREAD_GRAYSCALE)
+    resized_arr = cv2.resize(img_arr, (img_size, img_size))
+    return resized_arr
 
 def predict(image_name):
-    model = tf.keras.models.load_model("Pneumonia Detection .h5", compile=False)
-    model.compile(Adamax(learning_rate= 0.001), loss= 'binary_crossentropy', metrics= ['accuracy'])
+    model = tf.keras.models.load_model("model.h5")
+    
     image_folder = "patient_images" 
     image_path = os.path.join(image_folder, image_name)
 
-    image = Image.open(image_path)
-    st.image(image)
+    image=img_process_V2(image_path)
+    ans=PneumoniaPrediction(image,model)
 
-    # Preprocess the image
-    rgb_image = image.convert("RGB")
-    img = rgb_image.resize((224, 224))
-    img_array = tf.keras.preprocessing.image.img_to_array(img)
-    img_array = tf.expand_dims(img_array, 0)
-
-    # Make predictions
-    predictions = model.predict(img_array)
-    class_labels = ['Normal', 'Pneumonia']
-    score = tf.nn.softmax(predictions[0])
-    return True,f"{class_labels[tf.argmax(score)]}"
+    return True,ans
+    
 
 
