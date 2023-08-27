@@ -3,4 +3,5 @@ streamlit_authenticator
 deta
 streamlit_lottie
 numpy
-PIL
+tensorflow
+opencv-python
