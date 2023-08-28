@@ -33,87 +33,87 @@ st.markdown('''
 
 
 
-try:
-    users = fetch_users()
-    emails = []
-    usernames = []
-    passwords = []
+# try:
+users = fetch_users()
+emails = []
+usernames = []
+passwords = []
 
-    for user in users:
-        emails.append(user['key'])
-        usernames.append(user['username'])
-        passwords.append(user['password'])
+for user in users:
+    emails.append(user['key'])
+    usernames.append(user['username'])
+    passwords.append(user['password'])
 
-    credentials = {'usernames': {}}
-    for index in range(len(emails)):
-        credentials['usernames'][usernames[index]] = {'name': emails[index], 'password': passwords[index]}
+credentials = {'usernames': {}}
+for index in range(len(emails)):
+    credentials['usernames'][usernames[index]] = {'name': emails[index], 'password': passwords[index]}
 
-    Authenticator = stauth.Authenticate(credentials, cookie_name='Streamlit', key='abcdef', cookie_expiry_days=4)
-
-
-    email, authentication_status, username = Authenticator.login(':green[Login]', 'main')
+Authenticator = stauth.Authenticate(credentials, cookie_name='Streamlit', key='abcdef', cookie_expiry_days=4)
 
 
-    if username:
-        if username in usernames:
-            if authentication_status:
+email, authentication_status, username = Authenticator.login(':green[Login]', 'main')
+
+
+if username:
+    if username in usernames:
+        if authentication_status:
+                
+                st.title(':stethoscope: :red[Pneumonia Scan] :stethoscope:')
+                
+
+                with st.sidebar:
                     
-                    st.title(':stethoscope: :red[Pneumonia Scan] :stethoscope:')
                     
-
-                    with st.sidebar:
-                        
-                        
-                        st.subheader(f':house_with_garden: Welcome :green[{username}]')
-                        Authenticator.logout(':red[Log Out]', 'sidebar')
-                    
-                        lottie = load_lottie("lottie_images\hello.json")
-                        st_lottie(lottie,quality="high",height=200)
-                        
-                            
-
-                    
-                    lottie = load_lottie("lottie_images\lung.json")
+                    st.subheader(f':house_with_garden: Welcome :green[{username}]')
+                    Authenticator.logout(':red[Log Out]', 'sidebar')
+                
+                    lottie = load_lottie("lottie_images\hello.json")
                     st_lottie(lottie,quality="high",height=200)
-                
-                
-
-                    status,img = patient_form(username)
-                    if status:
-                        p_status,prediction = predict(img)
-                        if p_status:
-                            if prediction == 'Pneumonia':
-                                st.title(":cold_sweat: You are diagnosed with 'Pneumonia'")
-                            else:
-                                st.balloons()
-                                st.title(":slightly_smiling_face: Your test result is 'Normal'")
                     
                         
-                        
 
+                
+                lottie = load_lottie("lottie_images\lung.json")
+                st_lottie(lottie,quality="high",height=200)
+            
+            
 
-
-            elif not authentication_status:
+                status,img = patient_form(username)
+                if status:
+                    p_status,prediction = predict(img)
+                    if p_status:
+                        if prediction == 'Pneumonia':
+                            st.title(":cold_sweat: You are diagnosed with 'Pneumonia'")
+                        else:
+                            st.balloons()
+                            st.title(":slightly_smiling_face: Your test result is 'Normal'")
+                
                     
-                    st.error('Incorrect username or Password !')
-            else:
-                    st.error('Incorrect username or Password !')
+                    
+
+
+
+        elif not authentication_status:
+                
+                st.error('Incorrect username or Password !')
         else:
                 st.error('Incorrect username or Password !')
+    else:
+            st.error('Incorrect username or Password !')
 
-    if not authentication_status:
-        with st.sidebar:
-            st.markdown("""<h1><span style='color:#87CEEB'>Option Menu</span></h1>""", 
-                unsafe_allow_html=True,)
-            inp = st.selectbox(label="hjgh",options=['SIGN UP',"RESET PASSWORD","FORGOT PASSWORD"],label_visibility="hidden")
+if not authentication_status:
+    with st.sidebar:
+        st.markdown("""<h1><span style='color:#87CEEB'>Option Menu</span></h1>""", 
+            unsafe_allow_html=True,)
+        inp = st.selectbox(label="hjgh",options=['SIGN UP',"RESET PASSWORD","FORGOT PASSWORD"],label_visibility="hidden")
 
-            if inp == 'SIGN UP':
-                sign_up()
-            elif inp == 'FORGOT PASSWORD':
-                forgot_pass()
-            elif inp == 'RESET PASSWORD':
-                reset_pass()
+        if inp == 'SIGN UP':
+            sign_up()
+        elif inp == 'FORGOT PASSWORD':
+            forgot_pass()
+        elif inp == 'RESET PASSWORD':
+            reset_pass()
 
 
-except:
-    st.success('Refresh Page')
+# except:
+#     st.success('Refresh Page')
