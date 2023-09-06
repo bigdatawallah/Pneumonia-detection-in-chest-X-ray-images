@@ -93,9 +93,6 @@ if username:
 
 
 
-        elif not authentication_status:
-                
-                st.error('Incorrect username or Password !')
         else:
                 st.error('Incorrect username or Password !')
     else:
